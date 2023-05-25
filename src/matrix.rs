@@ -1,15 +1,16 @@
+use num::{traits::Zero, Integer};
 use std::{
     fmt::{self, Debug, Display, Formatter},
-    ops::{Add, Mul},
+    ops::{Add, Mul, Sub},
     result::Result,
 };
 
 #[derive(PartialEq, Debug)]
-pub struct Matrix<T: Mul + Add> {
+pub struct Matrix<T: Mul + Add + Sub> {
     entries: Vec<Vec<T>>,
 }
 
-impl<T: Mul + Add> Matrix<T> {
+impl<T: Mul + Add + Sub + Zero> Matrix<T> {
     pub fn from(entries: Vec<Vec<T>>) -> Result<Matrix<T>, &'static str> {
         let mut equal_rows = true;
         let row_len = entries[0].len();
@@ -34,7 +35,7 @@ impl<T: Mul + Add> Matrix<T> {
         self.entries[0].len()
     }
 
-    pub fn transpose(&self) -> Matrix<T>
+    pub fn transpose(&self) -> Self
     where
         T: Copy,
     {
@@ -62,15 +63,66 @@ impl<T: Mul + Add> Matrix<T> {
     {
         self.transpose().entries
     }
+
+    pub fn is_square(&self) -> bool {
+        self.height() == self.width()
+    }
+
+    pub fn submatrix(&self, i: usize, j: usize) -> Self
+    where
+        T: Copy,
+    {
+        let mut out = Vec::new();
+        for (m, row) in self.rows().iter().enumerate() {
+            if m == i {
+                continue;
+            }
+            let mut new_row = Vec::new();
+            for (n, entry) in row.iter().enumerate() {
+                if n != j {
+                    new_row.push(*entry);
+                }
+            }
+            out.push(new_row);
+        }
+        Matrix { entries: out }
+    }
+
+    pub fn det(&self) -> Result<T, &'static str>
+    where
+        T: Copy,
+        T: Mul<Output = T>,
+        T: Sub<Output = T>,
+    {
+        if self.is_square() {
+            let out = if self.width() == 1 {
+                self.entries[0][0]
+            } else {
+                let n = 0..self.width();
+                let mut out = T::zero();
+                for i in n {
+                    if i.is_even() {
+                        out = out + (self.entries[0][i] * self.submatrix(0, i).det().unwrap());
+                    } else {
+                        out = out - (self.entries[0][i] * self.submatrix(0, i).det().unwrap());
+                    }
+                }
+                out
+            };
+            Ok(out)
+        } else {
+            Err("Provided matrix isn't square.")
+        }
+    }
 }
 
-impl<T: Debug + Mul + Add> Display for Matrix<T> {
+impl<T: Debug + Mul + Add + Sub> Display for Matrix<T> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{:?}", self.entries)
     }
 }
 
-impl<T: Mul<Output = T> + Add<Output = T> + Copy> Mul for Matrix<T> {
+impl<T: Mul<Output = T> + Add + Sub + Copy + Zero> Mul for Matrix<T> {
     type Output = Self;
     fn mul(self, other: Self) -> Self {
         let width = self.width();
@@ -94,7 +146,7 @@ impl<T: Mul<Output = T> + Add<Output = T> + Copy> Mul for Matrix<T> {
     }
 }
 
-impl<T: Add<Output = T> + Mul + Copy> Add for Matrix<T> {
+impl<T: Add<Output = T> + Sub + Mul + Copy + Zero> Add for Matrix<T> {
     type Output = Self;
     fn add(self, other: Self) -> Self {
         if self.height() == other.height() && self.width() == other.width() {
