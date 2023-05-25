@@ -5,7 +5,7 @@ use std::{
     result::Result,
 };
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Matrix<T: Mul + Add + Sub> {
     entries: Vec<Vec<T>>,
 }
@@ -154,6 +154,23 @@ impl<T: Add<Output = T> + Sub + Mul + Copy + Zero> Add for Matrix<T> {
             for (i, row) in self.rows().iter().enumerate() {
                 for (j, entry) in other.rows()[i].iter().enumerate() {
                     out[i][j] = row[j] + *entry;
+                }
+            }
+            Matrix { entries: out }
+        } else {
+            panic!("Both matrices must be of same dimensions.");
+        }
+    }
+}
+
+impl<T: Add + Sub<Output = T> + Mul + Copy + Zero> Sub for Matrix<T> {
+    type Output = Self;
+    fn sub(self, other: Self) -> Self {
+        if self.height() == other.height() && self.width() == other.width() {
+            let mut out = self.entries.clone();
+            for (i, row) in self.rows().iter().enumerate() {
+                for (j, entry) in other.rows()[i].iter().enumerate() {
+                    out[i][j] = row[j] - *entry;
                 }
             }
             Matrix { entries: out }
