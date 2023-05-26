@@ -32,7 +32,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     /// It'll throw an error if all the given rows aren't of the same size.
     /// # Example
     /// ```
-    /// use matrix::Matrix;
+    /// use matrix_basic::Matrix;
     /// let m = Matrix::from(vec![vec![1,2,3], vec![4,5,6]]);
     /// ```
     /// will create the following matrix:  
@@ -102,7 +102,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     /// Note: Row and column numbers are 0-indexed.
     /// # Example
     /// ```
-    /// use matrix::Matrix;
+    /// use matrix_basic::Matrix;
     /// let m = Matrix::from(vec![vec![1,2,3],vec![4,5,6]]).unwrap();
     /// let n = Matrix::from(vec![vec![5,6]]).unwrap();
     /// assert_eq!(m.submatrix(0,0),n);
@@ -133,7 +133,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     /// It'll throw an error if the provided matrix isn't square.
     /// # Example
     /// ```
-    /// use matrix::Matrix;
+    /// use matrix_basic::Matrix;
     /// let m = Matrix::from(vec![vec![1,2],vec![3,4]]).unwrap();
     /// assert_eq!(m.det(),Ok(-2));
     /// ```
