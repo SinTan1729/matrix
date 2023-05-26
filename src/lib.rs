@@ -176,8 +176,8 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
-    /// let m = Matrix::from(vec![vec![1,2],vec![3,4]]).unwrap();
-    /// assert_eq!(m.det(),Ok(-2));
+    /// let m = Matrix::from(vec![vec![1.0,2.0],vec![3.0,4.0]]).unwrap();
+    /// assert_eq!(m.det(),Ok(-2.0));
     /// ```
     pub fn det_in_field(&self) -> Result<T, &'static str>
     where
@@ -210,8 +210,9 @@ impl<T: Mul + Add + Sub> Matrix<T> {
                     }
                 }
                 for j in (i + 1)..self.height() {
-                    for k in (i + 1)..self.width() {
-                        rows[j][k] = rows[j][k] - rows[i][k] * rows[j][i] / rows[i][i];
+                    let ratio = rows[j][i] / rows[i][i];
+                    for k in i..self.width() {
+                        rows[j][k] = rows[j][k] - rows[i][k] * ratio;
                     }
                 }
             }
@@ -222,6 +223,62 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         } else {
             Err("Provided matrix isn't square.")
         }
+    }
+
+    /// Return the row echelon form of a matrix over a field i.e. needs [`One`] and [`Div`] traits.
+    /// # Example
+    /// ```
+    /// use matrix_basic::Matrix;
+    /// let m = Matrix::from(vec![vec![1.0,2.0,3.0],vec![3.0,4.0,5.0]]).unwrap();
+    /// let n = Matrix::from(vec![vec![1.0,2.0,3.0], vec![0.0,-2.0,-4.0]]).unwrap();
+    /// assert_eq!(m.row_echelon(),n);
+    /// ```
+    pub fn row_echelon(&self) -> Self
+    where
+        T: Copy,
+        T: Mul<Output = T>,
+        T: Sub<Output = T>,
+        T: Zero,
+        T: One,
+        T: PartialEq,
+        T: Div<Output = T>,
+        T: Display,
+    {
+        // Cloning is necessary as we'll be doing row operations on it.
+        let mut rows = self.entries.clone();
+        let mut offset = 0;
+        for i in 0..self.height() {
+            // Check if all the rows below are 0
+            if i + offset >= self.width() {
+                break;
+            }
+            // First check if the row has diagonal element 0, if yes, then swap.
+            if rows[i][i + offset] == T::zero() {
+                let mut zero_column = true;
+                for j in (i + 1)..self.height() {
+                    if rows[j][i + offset] != T::zero() {
+                        rows.swap(i, j);
+                        zero_column = false;
+                        break;
+                    }
+                }
+                if zero_column {
+                    offset += 1;
+                }
+            }
+            for j in (i + 1)..self.height() {
+                let ratio = rows[j][i + offset] / rows[i][i + offset];
+                for k in (i + offset)..self.width() {
+                    rows[j][k] = rows[j][k] - rows[i][k] * ratio;
+                    println!(
+                        "{}, {}",
+                        rows[j][k],
+                        rows[i][k] * rows[j][i + offset] / rows[i][i + offset]
+                    );
+                }
+            }
+        }
+        Matrix { entries: rows }
     }
 
     /// Creates a zero matrix of a given size.
