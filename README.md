@@ -6,4 +6,7 @@
 This is a crate for very basic matrix operations with any type that supports addition, substraction,
 and multiplication. Additional properties might be needed for certain operations.
 
-I created it mostly to learn using generic types and traits.
+I created it mostly to learn how to use generic types and traits.
+
+## Usage
+Documentation is available here: [docs.rs](https://docs.rs/matrix-basic).
