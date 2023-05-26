@@ -54,17 +54,17 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         }
     }
 
-    /// Return the height of a matrix.
+    /// Returns the height of a matrix.
     pub fn height(&self) -> usize {
         self.entries.len()
     }
 
-    /// Return the width of a matrix.
+    /// Returns the width of a matrix.
     pub fn width(&self) -> usize {
         self.entries[0].len()
     }
 
-    /// Return the transpose of a matrix.
+    /// Returns the transpose of a matrix.
     pub fn transpose(&self) -> Self
     where
         T: Copy,
@@ -80,7 +80,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         Matrix { entries: out }
     }
 
-    /// Return a reference to the rows of a matrix as `&Vec<Vec<T>>`.
+    /// Returns a reference to the rows of a matrix as `&Vec<Vec<T>>`.
     pub fn rows(&self) -> &Vec<Vec<T>> {
         &self.entries
     }
@@ -98,7 +98,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         self.height() == self.width()
     }
 
-    /// Return a matrix after removing the provided row and column from it.
+    /// Returns a matrix after removing the provided row and column from it.
     /// Note: Row and column numbers are 0-indexed.
     /// # Example
     /// ```
@@ -127,7 +127,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         Matrix { entries: out }
     }
 
-    /// Return the determinant of a square matrix. This method additionally requires [`Zero`],
+    /// Returns the determinant of a square matrix. This method additionally requires [`Zero`],
     /// [`One`] and [`Copy`] traits. Also, we need that the [`Mul`] and [`Add`] operations
     /// return the same type `T`. This uses basic recursive algorithm using cofactor-minor.
     /// See [`det_in_field`](Self::det_in_field()) for faster determinant calculation in fields.
@@ -169,7 +169,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         }
     }
 
-    /// Return the determinant of a square matrix over a field i.e. needs [`One`] and [`Div`] traits.
+    /// Returns the determinant of a square matrix over a field i.e. needs [`One`] and [`Div`] traits.
     /// See [`det`](Self::det()) for determinants in rings.
     /// This method uses row reduction as is much faster.
     /// It'll throw an error if the provided matrix isn't square.
