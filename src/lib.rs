@@ -1,3 +1,10 @@
+//! This is a crate for very basic matrix operations
+//! with any type that supports addition, substraction,
+//! and multiplication. Additional properties might be
+//! needed for certain operations.
+//!
+//! Sayantan Santra (2023)
+
 pub mod matrix;
 
 #[cfg(test)]

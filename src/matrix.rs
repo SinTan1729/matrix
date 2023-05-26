@@ -8,12 +8,25 @@ use std::{
     result::Result,
 };
 
+/// A generic matrix struct (over any type with addition, substraction
+/// and multiplication defined on it).
+/// Look at [`from`](Self::from()) to see examples.
 #[derive(PartialEq, Debug, Clone)]
 pub struct Matrix<T: Mul + Add + Sub> {
     entries: Vec<Vec<T>>,
 }
 
 impl<T: Mul + Add + Sub> Matrix<T> {
+    /// Creates a matrix from given 2D "array" in a `Vec<Vec<T>>` form.
+    /// It'll throw error if all the given rows aren't of the same size.
+    /// # Example
+    /// ```
+    /// use matrix::matrix::Matrix;
+    /// let m = Matrix::from(vec![vec![1,2,3], vec![4,5,6]]);
+    /// ```
+    /// will create the following matrix:  
+    /// ⌈1,2,3⌉  
+    /// ⌊4,5,6⌋
     pub fn from(entries: Vec<Vec<T>>) -> Result<Matrix<T>, &'static str> {
         let mut equal_rows = true;
         let row_len = entries[0].len();
@@ -30,14 +43,17 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         }
     }
 
+    /// Return the height of a matrix.
     pub fn height(&self) -> usize {
         self.entries.len()
     }
 
+    /// Return the width of a matrix.
     pub fn width(&self) -> usize {
         self.entries[0].len()
     }
 
+    /// Return the transpose of a matrix.
     pub fn transpose(&self) -> Self
     where
         T: Copy,
@@ -53,13 +69,12 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         Matrix { entries: out }
     }
 
-    pub fn rows(&self) -> Vec<Vec<T>>
-    where
-        T: Copy,
-    {
-        self.entries.clone()
+    /// Return a reference to the rows of a matrix as `&Vec<Vec<T>>`.
+    pub fn rows(&self) -> &Vec<Vec<T>> {
+        &self.entries
     }
 
+    /// Return the columns of a matrix as `Vec<Vec<T>>`.
     pub fn columns(&self) -> Vec<Vec<T>>
     where
         T: Copy,
@@ -67,22 +82,32 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         self.transpose().entries
     }
 
+    /// Return true if a matrix is square and false otherwise.
     pub fn is_square(&self) -> bool {
         self.height() == self.width()
     }
 
-    pub fn submatrix(&self, i: usize, j: usize) -> Self
+    /// Return a matrix after removing the provided row and column from it.
+    /// Note: Row and column numbers are 0-indexed.
+    /// # Example
+    /// ```
+    /// use matrix::matrix::Matrix;
+    /// let m = Matrix::from(vec![vec![1,2,3],vec![4,5,6]]).unwrap();
+    /// let n = Matrix::from(vec![vec![5,6]]).unwrap();
+    /// assert_eq!(m.submatrix(0,0),n);
+    /// ```
+    pub fn submatrix(&self, row: usize, col: usize) -> Self
     where
         T: Copy,
     {
         let mut out = Vec::new();
-        for (m, row) in self.rows().iter().enumerate() {
-            if m == i {
+        for (m, row_iter) in self.entries.iter().enumerate() {
+            if m == row {
                 continue;
             }
             let mut new_row = Vec::new();
-            for (n, entry) in row.iter().enumerate() {
-                if n != j {
+            for (n, entry) in row_iter.iter().enumerate() {
+                if n != col {
                     new_row.push(*entry);
                 }
             }
@@ -119,6 +144,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         }
     }
 
+    /// Creates a zero matrix of a given size.
     pub fn zero(height: usize, width: usize) -> Self
     where
         T: Zero,
@@ -134,6 +160,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         Matrix { entries: out }
     }
 
+    /// Creates an identity matrix of a given size.
     pub fn identity(size: usize) -> Self
     where
         T: Zero,
