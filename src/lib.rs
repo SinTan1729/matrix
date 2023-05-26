@@ -13,7 +13,7 @@ use num::{
 };
 use std::{
     fmt::{self, Debug, Display, Formatter},
-    ops::{Add, Mul, Sub},
+    ops::{Add, Div, Mul, Sub},
     result::Result,
 };
 
@@ -129,7 +129,8 @@ impl<T: Mul + Add + Sub> Matrix<T> {
 
     /// Return the determinant of a square matrix. This method additionally requires [`Zero`],
     /// [`One`] and [`Copy`] traits. Also, we need that the [`Mul`] and [`Add`] operations
-    /// return the same type `T`.
+    /// return the same type `T`. This uses basic recursive algorithm using cofactor-minor.
+    /// See [`det_in_field`](Self::det_in_field()) for faster determinant calculation in fields.
     /// It'll throw an error if the provided matrix isn't square.
     /// # Example
     /// ```
@@ -146,7 +147,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     {
         if self.is_square() {
             // It's a recursive algorithm using minors.
-            // TODO: Implement a faster algorithm. Maybe use row reduction for fields.
+            // TODO: Implement a faster algorithm.
             let out = if self.width() == 1 {
                 self.entries[0][0]
             } else {
@@ -163,6 +164,61 @@ impl<T: Mul + Add + Sub> Matrix<T> {
                 out
             };
             Ok(out)
+        } else {
+            Err("Provided matrix isn't square.")
+        }
+    }
+
+    /// Return the determinant of a square matrix over a field i.e. needs [`One`] and [`Div`] traits.
+    /// See [`det`](Self::det()) for determinants in rings.
+    /// This method uses row reduction as is much faster.
+    /// It'll throw an error if the provided matrix isn't square.
+    /// # Example
+    /// ```
+    /// use matrix_basic::Matrix;
+    /// let m = Matrix::from(vec![vec![1,2],vec![3,4]]).unwrap();
+    /// assert_eq!(m.det(),Ok(-2));
+    /// ```
+    pub fn det_in_field(&self) -> Result<T, &'static str>
+    where
+        T: Copy,
+        T: Mul<Output = T>,
+        T: Sub<Output = T>,
+        T: Zero,
+        T: One,
+        T: PartialEq,
+        T: Div<Output = T>,
+    {
+        if self.is_square() {
+            // Cloning is necessary as we'll be doing row operations on it.
+            let mut rows = self.entries.clone();
+            let mut multiplier = T::one();
+            for i in 0..self.height() {
+                // First check if the row has diagonal element 0, if yes, then swap.
+                if rows[i][i] == T::zero() {
+                    let mut zero_column = true;
+                    for j in (i + 1)..self.height() {
+                        if rows[j][i] != T::zero() {
+                            rows.swap(i, j);
+                            multiplier = T::zero() - multiplier;
+                            zero_column = false;
+                            break;
+                        }
+                    }
+                    if zero_column {
+                        return Ok(T::zero());
+                    }
+                }
+                for j in (i + 1)..self.height() {
+                    for k in (i + 1)..self.width() {
+                        rows[j][k] = rows[j][k] - rows[i][k] * rows[j][i] / rows[i][i];
+                    }
+                }
+            }
+            for (i, row) in rows.iter().enumerate() {
+                multiplier = multiplier * row[i];
+            }
+            Ok(multiplier)
         } else {
             Err("Provided matrix isn't square.")
         }
@@ -213,7 +269,7 @@ impl<T: Debug + Mul + Add + Sub> Display for Matrix<T> {
 }
 
 impl<T: Mul<Output = T> + Add + Sub + Copy + Zero> Mul for Matrix<T> {
-    // TODO: Implement a faster algorithm. Maybe use row reduction for fields.
+    // TODO: Implement a faster algorithm.
     type Output = Self;
     fn mul(self, other: Self) -> Self {
         let width = self.width();
