@@ -14,8 +14,10 @@ fn add_sub_test() {
     let b = Matrix::from(vec![vec![0, 0, 1], vec![2, 1, 3]]).unwrap();
     let c = Matrix::from(vec![vec![1, 2, 4], vec![2, 2, 5]]).unwrap();
     let d = Matrix::from(vec![vec![1, 2, 2], vec![-2, 0, -1]]).unwrap();
+    let e = Matrix::from(vec![vec![-1, -2, -4], vec![-2, -2, -5]]).unwrap();
     assert_eq!(a.clone() + b.clone(), c);
     assert_eq!(a - b, d);
+    assert_eq!(-c, e);
 }
 
 #[test]

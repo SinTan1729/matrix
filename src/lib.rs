@@ -13,7 +13,7 @@ use num::{
 };
 use std::{
     fmt::{self, Debug, Display, Formatter},
-    ops::{Add, Div, Mul, Sub},
+    ops::{Add, Div, Mul, Neg, Sub},
     result::Result,
 };
 
@@ -377,7 +377,7 @@ impl<T: Debug + Mul + Add + Sub> Display for Matrix<T> {
 impl<T: Mul<Output = T> + Add + Sub + Copy + Zero> Mul for Matrix<T> {
     // TODO: Implement a faster algorithm.
     type Output = Self;
-    fn mul(self, other: Self) -> Self {
+    fn mul(self, other: Self) -> Self::Output {
         let width = self.width();
         if width != other.height() {
             panic!("Row length of first matrix must be same as column length of second matrix.");
@@ -401,7 +401,7 @@ impl<T: Mul<Output = T> + Add + Sub + Copy + Zero> Mul for Matrix<T> {
 
 impl<T: Add<Output = T> + Sub + Mul + Copy + Zero> Add for Matrix<T> {
     type Output = Self;
-    fn add(self, other: Self) -> Self {
+    fn add(self, other: Self) -> Self::Output {
         if self.height() == other.height() && self.width() == other.width() {
             let mut out = self.entries.clone();
             for (i, row) in self.rows().iter().enumerate() {
@@ -416,17 +416,24 @@ impl<T: Add<Output = T> + Sub + Mul + Copy + Zero> Add for Matrix<T> {
     }
 }
 
-impl<T: Add + Sub<Output = T> + Mul + Copy + Zero> Sub for Matrix<T> {
+impl<T: Add + Sub<Output = T> + Mul + Copy + Neg<Output = T>> Neg for Matrix<T> {
     type Output = Self;
-    fn sub(self, other: Self) -> Self {
-        if self.height() == other.height() && self.width() == other.width() {
-            let mut out = self.entries.clone();
-            for (i, row) in self.rows().iter().enumerate() {
-                for (j, entry) in other.rows()[i].iter().enumerate() {
-                    out[i][j] = row[j] - *entry;
-                }
+    fn neg(self) -> Self::Output {
+        let mut out = self;
+        for row in &mut out.entries {
+            for entry in row {
+                *entry = -*entry;
             }
-            Matrix { entries: out }
+        }
+        out
+    }
+}
+
+impl<T: Add + Sub<Output = T> + Mul + Copy + Zero + Neg<Output = T>> Sub for Matrix<T> {
+    type Output = Self;
+    fn sub(self, other: Self) -> Self::Output {
+        if self.height() == other.height() && self.width() == other.width() {
+            self + -other
         } else {
             panic!("Both matrices must be of same dimensions.");
         }
