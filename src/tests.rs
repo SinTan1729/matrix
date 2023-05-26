@@ -40,3 +40,14 @@ fn zero_one_test() {
     assert_eq!(Matrix::<i32>::zero(2, 3), a);
     assert_eq!(Matrix::<i32>::identity(2), b);
 }
+
+#[test]
+fn echelon_test() {
+    let m = Matrix::from(vec![vec![1.0, 2.0, 3.0], vec![1.0, 0.0, 1.0]]).unwrap();
+    let a = Matrix::from(vec![vec![1.0, 2.0, 3.0], vec![0.0, -2.0, -2.0]]).unwrap();
+    let b = Matrix::from(vec![vec![1.0, 0.0, 0.0], vec![1.0, -2.0, 0.0]]).unwrap();
+    let c = Matrix::from(vec![vec![1.0, 2.0, 3.0], vec![0.0, 1.0, 1.0]]).unwrap();
+    assert_eq!(m.row_echelon(), a);
+    assert_eq!(m.column_echelon(), b);
+    assert_eq!(m.reduced_row_echelon(), c);
+}

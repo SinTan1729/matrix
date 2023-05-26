@@ -193,11 +193,13 @@ impl<T: Mul + Add + Sub> Matrix<T> {
             // Cloning is necessary as we'll be doing row operations on it.
             let mut rows = self.entries.clone();
             let mut multiplier = T::one();
-            for i in 0..self.height() {
+            let h = self.height();
+            let w = self.width();
+            for i in 0..h {
                 // First check if the row has diagonal element 0, if yes, then swap.
                 if rows[i][i] == T::zero() {
                     let mut zero_column = true;
-                    for j in (i + 1)..self.height() {
+                    for j in (i + 1)..h {
                         if rows[j][i] != T::zero() {
                             rows.swap(i, j);
                             multiplier = T::zero() - multiplier;
@@ -209,9 +211,9 @@ impl<T: Mul + Add + Sub> Matrix<T> {
                         return Ok(T::zero());
                     }
                 }
-                for j in (i + 1)..self.height() {
+                for j in (i + 1)..h {
                     let ratio = rows[j][i] / rows[i][i];
-                    for k in i..self.width() {
+                    for k in i..w {
                         rows[j][k] = rows[j][k] - rows[i][k] * ratio;
                     }
                 }
@@ -225,7 +227,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         }
     }
 
-    /// Return the row echelon form of a matrix over a field i.e. needs [`One`] and [`Div`] traits.
+    /// Returns the row echelon form of a matrix over a field i.e. needs [`One`] and [`Div`] traits.
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
@@ -242,12 +244,13 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         T: One,
         T: PartialEq,
         T: Div<Output = T>,
-        T: Display,
     {
         // Cloning is necessary as we'll be doing row operations on it.
         let mut rows = self.entries.clone();
         let mut offset = 0;
-        for i in 0..self.height() {
+        let h = self.height();
+        let w = self.width();
+        for i in 0..h {
             // Check if all the rows below are 0
             if i + offset >= self.width() {
                 break;
@@ -255,7 +258,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
             // First check if the row has diagonal element 0, if yes, then swap.
             if rows[i][i + offset] == T::zero() {
                 let mut zero_column = true;
-                for j in (i + 1)..self.height() {
+                for j in (i + 1)..h {
                     if rows[j][i + offset] != T::zero() {
                         rows.swap(i, j);
                         zero_column = false;
@@ -266,19 +269,63 @@ impl<T: Mul + Add + Sub> Matrix<T> {
                     offset += 1;
                 }
             }
-            for j in (i + 1)..self.height() {
+            for j in (i + 1)..h {
                 let ratio = rows[j][i + offset] / rows[i][i + offset];
-                for k in (i + offset)..self.width() {
+                for k in (i + offset)..w {
                     rows[j][k] = rows[j][k] - rows[i][k] * ratio;
-                    println!(
-                        "{}, {}",
-                        rows[j][k],
-                        rows[i][k] * rows[j][i + offset] / rows[i][i + offset]
-                    );
                 }
             }
         }
         Matrix { entries: rows }
+    }
+
+    /// Returns the column echelon form of a matrix over a field i.e. needs [`One`] and [`Div`] traits.
+    /// It's just the transpose of the row echelon form of the transpose.
+    /// See [`row_echelon`](Self::row_echelon()) and [`transpose`](Self::transpose()).
+    pub fn column_echelon(&self) -> Self
+    where
+        T: Copy,
+        T: Mul<Output = T>,
+        T: Sub<Output = T>,
+        T: Zero,
+        T: One,
+        T: PartialEq,
+        T: Div<Output = T>,
+    {
+        self.transpose().row_echelon().transpose()
+    }
+
+    /// Returns the reduced row echelon form of a matrix over a field i.e. needs [`One`] and [`Div`] traits.
+    /// # Example
+    /// ```
+    /// use matrix_basic::Matrix;
+    /// let m = Matrix::from(vec![vec![1.0,2.0,3.0],vec![3.0,4.0,5.0]]).unwrap();
+    /// let n = Matrix::from(vec![vec![1.0,2.0,3.0], vec![0.0,1.0,2.0]]).unwrap();
+    /// assert_eq!(m.reduced_row_echelon(),n);
+    /// ```
+    pub fn reduced_row_echelon(&self) -> Self
+    where
+        T: Copy,
+        T: Mul<Output = T>,
+        T: Sub<Output = T>,
+        T: Zero,
+        T: One,
+        T: PartialEq,
+        T: Div<Output = T>,
+    {
+        let mut echelon = self.row_echelon();
+        let mut offset = 0;
+        for row in &mut echelon.entries {
+            while row[offset] == T::zero() {
+                offset += 1;
+            }
+            let divisor = row[offset];
+            for entry in row.iter_mut().skip(offset) {
+                *entry = *entry / divisor;
+            }
+            offset += 1;
+        }
+        echelon
     }
 
     /// Creates a zero matrix of a given size.
@@ -317,6 +364,8 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         }
         Matrix { entries: out }
     }
+
+    // TODO: Canonical forms, eigenvalues, eigenvectors etc.
 }
 
 impl<T: Debug + Mul + Add + Sub> Display for Matrix<T> {
