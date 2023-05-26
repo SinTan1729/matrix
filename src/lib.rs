@@ -2,6 +2,8 @@
 //! with any type that supports addition, substraction,
 //! and multiplication. Additional properties might be
 //! needed for certain operations.
+//! I created it mostly to learn using generic types
+//! and traits.
 //!
 //! Sayantan Santra (2023)
 
@@ -27,7 +29,7 @@ pub struct Matrix<T: Mul + Add + Sub> {
 
 impl<T: Mul + Add + Sub> Matrix<T> {
     /// Creates a matrix from given 2D "array" in a `Vec<Vec<T>>` form.
-    /// It'll throw error if all the given rows aren't of the same size.
+    /// It'll throw an error if all the given rows aren't of the same size.
     /// # Example
     /// ```
     /// use matrix::Matrix;
@@ -125,6 +127,16 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         Matrix { entries: out }
     }
 
+    /// Return the determinant of a square matrix. This method additionally requires [`Zero`],
+    /// [`One`] and [`Copy`] traits. Also, we need that the [`Mul`] and [`Add`] operations
+    /// return the same type `T`.
+    /// It'll throw an error if the provided matrix isn't square.
+    /// # Example
+    /// ```
+    /// use matrix::Matrix;
+    /// let m = Matrix::from(vec![vec![1,2],vec![3,4]]).unwrap();
+    /// assert_eq!(m.det(),Ok(-2));
+    /// ```
     pub fn det(&self) -> Result<T, &'static str>
     where
         T: Copy,
@@ -133,9 +145,12 @@ impl<T: Mul + Add + Sub> Matrix<T> {
         T: Zero,
     {
         if self.is_square() {
+            // It's a recursive algorithm using minors.
+            // TODO: Implement a faster algorithm. Maybe use row reduction for fields.
             let out = if self.width() == 1 {
                 self.entries[0][0]
             } else {
+                // Add the minors multiplied by cofactors.
                 let n = 0..self.width();
                 let mut out = T::zero();
                 for i in n {
@@ -198,6 +213,7 @@ impl<T: Debug + Mul + Add + Sub> Display for Matrix<T> {
 }
 
 impl<T: Mul<Output = T> + Add + Sub + Copy + Zero> Mul for Matrix<T> {
+    // TODO: Implement a faster algorithm. Maybe use row reduction for fields.
     type Output = Self;
     fn mul(self, other: Self) -> Self {
         let width = self.width();
