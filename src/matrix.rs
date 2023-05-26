@@ -1,4 +1,7 @@
-use num::{traits::Zero, Integer};
+use num::{
+    traits::{One, Zero},
+    Integer,
+};
 use std::{
     fmt::{self, Debug, Display, Formatter},
     ops::{Add, Mul, Sub},
@@ -10,7 +13,7 @@ pub struct Matrix<T: Mul + Add + Sub> {
     entries: Vec<Vec<T>>,
 }
 
-impl<T: Mul + Add + Sub + Zero> Matrix<T> {
+impl<T: Mul + Add + Sub> Matrix<T> {
     pub fn from(entries: Vec<Vec<T>>) -> Result<Matrix<T>, &'static str> {
         let mut equal_rows = true;
         let row_len = entries[0].len();
@@ -93,6 +96,7 @@ impl<T: Mul + Add + Sub + Zero> Matrix<T> {
         T: Copy,
         T: Mul<Output = T>,
         T: Sub<Output = T>,
+        T: Zero,
     {
         if self.is_square() {
             let out = if self.width() == 1 {
@@ -113,6 +117,41 @@ impl<T: Mul + Add + Sub + Zero> Matrix<T> {
         } else {
             Err("Provided matrix isn't square.")
         }
+    }
+
+    pub fn zero(height: usize, width: usize) -> Self
+    where
+        T: Zero,
+    {
+        let mut out = Vec::new();
+        for _ in 0..height {
+            let mut new_row = Vec::new();
+            for _ in 0..width {
+                new_row.push(T::zero());
+            }
+            out.push(new_row);
+        }
+        Matrix { entries: out }
+    }
+
+    pub fn identity(size: usize) -> Self
+    where
+        T: Zero,
+        T: One,
+    {
+        let mut out = Vec::new();
+        for i in 0..size {
+            let mut new_row = Vec::new();
+            for j in 0..size {
+                if i == j {
+                    new_row.push(T::one());
+                } else {
+                    new_row.push(T::zero());
+                }
+            }
+            out.push(new_row);
+        }
+        Matrix { entries: out }
     }
 }
 
