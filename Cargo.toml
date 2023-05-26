@@ -2,6 +2,15 @@
 name = "matrix"
 version = "0.1.0"
 edition = "2021"
+authors = ["Sayantan Santra <sayantan[dot]santra689[at]gmail[dot]com"]
+license = "GPL-3.0"
+description = "A Rust crate for very basic matrix operations"
+homepage = "https://github.com/SinTan1729/matrix"
+documentation = "https://docs.rs/matrix"
+repository = "https://github.com/SinTan1729/matrix"
+readme = "README.md"
+keywords = ["matrix", "math"]
+categories = ["mathematics"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
