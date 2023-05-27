@@ -31,7 +31,7 @@ pub trait ToMatrix:
 {
 }
 
-/// Blanket implementation for ToMatrix for any type that satisfies its bounds
+/// Blanket implementation for ToMatrix for any type that satisfies its bounds.
 impl<T> ToMatrix for T where
     T: Mul<Output = T>
         + Add<Output = T>
@@ -475,7 +475,7 @@ impl<T: ToMatrix> Sub for Matrix<T> {
 }
 
 /// Trait for conversion between matrices of different types.
-/// It only has a `convert_to()` method.
+/// It only has a [`matrix_into()`](Self::matrix_into()) method.
 /// This is needed since negative trait bound are not supported in stable Rust
 /// yet, so we'll have a conflict trying to implement [`From`].
 /// I plan to change this to the default From trait as soon as some sort
