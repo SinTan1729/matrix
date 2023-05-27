@@ -1,6 +1,6 @@
 //! This is a crate for very basic matrix operations
 //! with any type that implement [`Add`], [`Sub`], [`Mul`],
-//! [`Zero`] and [`Copy`]. Additional properties might be
+//! [`Zero`], [`Neg`] and [`Copy`]. Additional properties might be
 //! needed for certain operations.
 //! I created it mostly to learn using generic types
 //! and traits.
@@ -19,15 +19,38 @@ use std::{
 
 mod tests;
 
-/// A generic matrix struct (over any type with addition, substraction
-/// and multiplication defined on it).
+/// Trait a type must satisfy to be element of a matrix. This is
+/// mostly to reduce writing trait bounds afterwards.
+pub trait ToMatrix:
+    Mul<Output = Self>
+    + Add<Output = Self>
+    + Sub<Output = Self>
+    + Zero<Output = Self>
+    + Neg<Output = Self>
+    + Copy
+{
+}
+
+/// Blanket implementation for ToMatrix for any type that satisfies its bounds
+impl<T> ToMatrix for T where
+    T: Mul<Output = T>
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Zero<Output = T>
+        + Neg<Output = T>
+        + Copy
+{
+}
+
+/// A generic matrix struct (over any type with [`Add`], [`Sub`], [`Mul`],
+/// [`Zero`], [`Neg`] and [`Copy`] implemented).
 /// Look at [`from`](Self::from()) to see examples.
 #[derive(PartialEq, Debug, Clone)]
-pub struct Matrix<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> {
+pub struct Matrix<T: ToMatrix> {
     entries: Vec<Vec<T>>,
 }
 
-impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matrix<T> {
+impl<T: ToMatrix> Matrix<T> {
     /// Creates a matrix from given 2D "array" in a `Vec<Vec<T>>` form.
     /// It'll throw an error if all the given rows aren't of the same size.
     /// # Example
@@ -379,17 +402,13 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     // TODO: Canonical forms, eigenvalues, eigenvectors etc.
 }
 
-impl<T: Debug + Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Display
-    for Matrix<T>
-{
+impl<T: Debug + ToMatrix> Display for Matrix<T> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{:?}", self.entries)
     }
 }
 
-impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Zero> Mul
-    for Matrix<T>
-{
+impl<T: Mul<Output = T> + ToMatrix> Mul for Matrix<T> {
     // TODO: Implement a faster algorithm.
     type Output = Self;
     fn mul(self, other: Self) -> Self::Output {
@@ -414,9 +433,7 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Zero
     }
 }
 
-impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Zero> Add
-    for Matrix<T>
-{
+impl<T: Mul<Output = T> + ToMatrix> Add for Matrix<T> {
     type Output = Self;
     fn add(self, other: Self) -> Self::Output {
         if self.height() == other.height() && self.width() == other.width() {
@@ -433,9 +450,7 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Zero
     }
 }
 
-impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Neg<Output = T>> Neg
-    for Matrix<T>
-{
+impl<T: ToMatrix> Neg for Matrix<T> {
     type Output = Self;
     fn neg(self) -> Self::Output {
         let mut out = self;
@@ -448,17 +463,7 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Neg<
     }
 }
 
-impl<
-        T: Mul<Output = T>
-            + Add<Output = T>
-            + Sub<Output = T>
-            + Zero
-            + Copy
-            + Copy
-            + Zero
-            + Neg<Output = T>,
-    > Sub for Matrix<T>
-{
+impl<T: ToMatrix> Sub for Matrix<T> {
     type Output = Self;
     fn sub(self, other: Self) -> Self::Output {
         if self.height() == other.height() && self.width() == other.width() {
@@ -476,7 +481,7 @@ impl<
 /// I plan to change this to the default From trait as soon as some sort
 /// of specialization system is implemented.
 /// You can track this issue [here](https://github.com/rust-lang/rust/issues/42721).
-pub trait MatrixInto<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> {
+pub trait MatrixInto<T: ToMatrix> {
     /// Method for converting a matrix into a matrix of type `Matrix<T>`
     fn matrix_into(self) -> Matrix<T>;
 }
@@ -494,11 +499,7 @@ pub trait MatrixInto<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Ze
 ///
 /// assert_eq!(c, b);
 /// ```
-impl<
-        T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy,
-        S: Mul<Output = S> + Add<Output = S> + Sub<Output = S> + Zero + Copy + Into<T>,
-    > MatrixInto<T> for Matrix<S>
-{
+impl<T: ToMatrix, S: ToMatrix + Into<T>> MatrixInto<T> for Matrix<S> {
     fn matrix_into(self) -> Matrix<T> {
         let mut out = Vec::new();
         for row in self.entries {
