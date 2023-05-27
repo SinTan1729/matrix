@@ -5,9 +5,13 @@ use crate::Matrix;
 fn mul_test() {
     let a = Matrix::from(vec![vec![1, 2, 4], vec![3, 4, 9]]).unwrap();
     let b = Matrix::from(vec![vec![1, 2], vec![2, 3], vec![5, 1]]).unwrap();
-    let c = Matrix::from(vec![vec![25, 12], vec![56, 27]]).unwrap();
+    let mut c = Matrix::from(vec![vec![25, 12], vec![56, 27]]).unwrap();
+    let d = Matrix::from(vec![vec![75, 36], vec![168, 81]]).unwrap();
 
     assert_eq!(a * b, c);
+
+    c.mul_scalar(3);
+    assert_eq!(c, d);
 }
 
 #[test]

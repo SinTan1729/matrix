@@ -33,11 +33,11 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
-    /// let m = Matrix::from(vec![vec![1,2,3], vec![4,5,6]]);
+    /// let m = Matrix::from(vec![vec![1, 2, 3], vec![4, 5, 6]]);
     /// ```
     /// will create the following matrix:  
-    /// ⌈1,2,3⌉  
-    /// ⌊4,5,6⌋
+    /// ⌈1, 2, 3⌉  
+    /// ⌊4, 5, 6⌋
     pub fn from(entries: Vec<Vec<T>>) -> Result<Matrix<T>, &'static str> {
         let mut equal_rows = true;
         let row_len = entries[0].len();
@@ -97,9 +97,9 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
-    /// let m = Matrix::from(vec![vec![1,2,3], vec![4,5,6]]).unwrap();
-    /// let n = Matrix::from(vec![vec![5,6]]).unwrap();
-    /// assert_eq!(m.submatrix(0,0),n);
+    /// let m = Matrix::from(vec![vec![1, 2, 3], vec![4, 5, 6]]).unwrap();
+    /// let n = Matrix::from(vec![vec![5, 6]]).unwrap();
+    /// assert_eq!(m.submatrix(0, 0), n);
     /// ```
     pub fn submatrix(&self, row: usize, col: usize) -> Self {
         let mut out = Vec::new();
@@ -125,8 +125,8 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
-    /// let m = Matrix::from(vec![vec![1,2], vec![3,4]]).unwrap();
-    /// assert_eq!(m.det(),Ok(-2));
+    /// let m = Matrix::from(vec![vec![1, 2], vec![3, 4]]).unwrap();
+    /// assert_eq!(m.det(), Ok(-2));
     /// ```
     pub fn det(&self) -> Result<T, &'static str> {
         if self.is_square() {
@@ -160,8 +160,8 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
-    /// let m = Matrix::from(vec![vec![1.0,2.0], vec![3.0,4.0]]).unwrap();
-    /// assert_eq!(m.det(),Ok(-2.0));
+    /// let m = Matrix::from(vec![vec![1.0, 2.0], vec![3.0, 4.0]]).unwrap();
+    /// assert_eq!(m.det(), Ok(-2.0));
     /// ```
     pub fn det_in_field(&self) -> Result<T, &'static str>
     where
@@ -211,9 +211,9 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
-    /// let m = Matrix::from(vec![vec![1.0,2.0,3.0], vec![3.0,4.0,5.0]]).unwrap();
-    /// let n = Matrix::from(vec![vec![1.0,2.0,3.0], vec![0.0,-2.0,-4.0]]).unwrap();
-    /// assert_eq!(m.row_echelon(),n);
+    /// let m = Matrix::from(vec![vec![1.0, 2.0, 3.0], vec![3.0, 4.0, 5.0]]).unwrap();
+    /// let n = Matrix::from(vec![vec![1.0, 2.0, 3.0], vec![0.0, -2.0, -4.0]]).unwrap();
+    /// assert_eq!(m.row_echelon(), n);
     /// ```
     pub fn row_echelon(&self) -> Self
     where
@@ -269,9 +269,9 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
-    /// let m = Matrix::from(vec![vec![1.0,2.0,3.0], vec![3.0,4.0,5.0]]).unwrap();
-    /// let n = Matrix::from(vec![vec![1.0,2.0,3.0], vec![0.0,1.0,2.0]]).unwrap();
-    /// assert_eq!(m.reduced_row_echelon(),n);
+    /// let m = Matrix::from(vec![vec![1.0, 2.0, 3.0], vec![3.0, 4.0, 5.0]]).unwrap();
+    /// let n = Matrix::from(vec![vec![1.0, 2.0, 3.0], vec![0.0, 1.0, 2.0]]).unwrap();
+    /// assert_eq!(m.reduced_row_echelon(), n);
     /// ```
     pub fn reduced_row_echelon(&self) -> Self
     where
@@ -324,8 +324,8 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
-    /// let m = Matrix::from(vec![vec![1,2], vec![3,4]]).unwrap();
-    /// assert_eq!(m.trace(),Ok(5));
+    /// let m = Matrix::from(vec![vec![1, 2], vec![3, 4]]).unwrap();
+    /// assert_eq!(m.trace(), Ok(5));
     /// ```
     pub fn trace(self) -> Result<T, &'static str> {
         if self.is_square() {
@@ -343,10 +343,10 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
-    /// let m = Matrix::diagonal_matrix(vec![1,2,3]);
-    /// let n = Matrix::from(vec![vec![1,0,0], vec![0,2,0], vec![0,0,3]]).unwrap();
+    /// let m = Matrix::diagonal_matrix(vec![1, 2, 3]);
+    /// let n = Matrix::from(vec![vec![1, 0, 0], vec![0, 2, 0], vec![0, 0, 3]]).unwrap();
     ///
-    /// assert_eq!(m,n);
+    /// assert_eq!(m, n);
     /// ```
     pub fn diagonal_matrix(diag: Vec<T>) -> Self {
         let size = diag.len();
@@ -355,6 +355,25 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
             row[i] = diag[i];
         }
         out
+    }
+
+    /// Multiplies all entries of a matrix by a scalar.
+    /// Note that it modifies the supplied matrix.
+    /// # Example
+    /// ```
+    /// use matrix_basic::Matrix;
+    /// let mut m = Matrix::from(vec![vec![1, 2, 0], vec![0, 2, 5], vec![0, 0, 3]]).unwrap();
+    /// let n = Matrix::from(vec![vec![2, 4, 0], vec![0, 4, 10], vec![0, 0, 6]]).unwrap();
+    /// m.mul_scalar(2);
+    ///
+    /// assert_eq!(m, n);
+    /// ```
+    pub fn mul_scalar(&mut self, scalar: T) {
+        for row in &mut self.entries {
+            for entry in row {
+                *entry = *entry * scalar;
+            }
+        }
     }
 
     // TODO: Canonical forms, eigenvalues, eigenvectors etc.
@@ -368,7 +387,7 @@ impl<T: Debug + Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Cop
     }
 }
 
-impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Copy + Zero> Mul
+impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Zero> Mul
     for Matrix<T>
 {
     // TODO: Implement a faster algorithm.
@@ -395,7 +414,7 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Copy
     }
 }
 
-impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Copy + Zero> Add
+impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Zero> Add
     for Matrix<T>
 {
     type Output = Self;
@@ -414,9 +433,8 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Copy
     }
 }
 
-impl<
-        T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Copy + Neg<Output = T>,
-    > Neg for Matrix<T>
+impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Neg<Output = T>> Neg
+    for Matrix<T>
 {
     type Output = Self;
     fn neg(self) -> Self::Output {
