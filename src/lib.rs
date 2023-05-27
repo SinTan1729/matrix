@@ -557,48 +557,14 @@ impl<T: ToMatrix> Sub for Matrix<T> {
 }
 
 /// Trait for conversion between matrices of different types.
-/// It only has a [`matrix_into()`](Self::matrix_into()) method.
+/// It only has a [`matrix_from()`](Self::matrix_from()) method.
 /// This is needed since negative trait bound are not supported in stable Rust
 /// yet, so we'll have a conflict trying to implement [`From`].
 /// I plan to change this to the default From trait as soon as some sort
 /// of specialization system is implemented.
 /// You can track this issue [here](https://github.com/rust-lang/rust/issues/42721).
-pub trait MatrixInto<T: ToMatrix> {
-    /// Method for converting a matrix into a matrix of type [`Matrix<T>`].
-    /// # Example
-    /// ```
-    /// use matrix_basic::Matrix;
-    /// use matrix_basic::MatrixInto;
-    ///
-    /// let a = Matrix::from(vec![vec![1, 2, 3], vec![0, 1, 2]]).unwrap();
-    /// let b = Matrix::from(vec![vec![1.0, 2.0, 3.0], vec![0.0, 1.0, 2.0]]).unwrap();
-    /// let c: Matrix<f64> = a.matrix_into(); // Type annotation is needed here
-    ///
-    /// assert_eq!(c, b);
-    /// ```
-    fn matrix_into(self) -> Matrix<T>;
-}
-
-/// Blanket implementation of [`MatrixInto`] for converting [`Matrix<S>`] to [`Matrix<T>`] whenever
-/// `S` implements [`Into(T)`]. Look at [`matrix_into`](Self::matrix_into()).
-impl<T: ToMatrix, S: ToMatrix + Into<T>> MatrixInto<T> for Matrix<S> {
-    fn matrix_into(self) -> Matrix<T> {
-        let mut out = Vec::new();
-        for row in self.entries {
-            let mut new_row: Vec<T> = Vec::new();
-            for entry in row {
-                new_row.push(entry.into());
-            }
-            out.push(new_row)
-        }
-        Matrix { entries: out }
-    }
-}
-
-/// Sister trait of [`MatrixInto`]. Basically does the same thing, just with a
-/// different syntax.
-pub trait MatrixFrom<T> {
-    /// Method for getting a matrix from another matrix of type [`Matrix<T>`].
+pub trait MatrixFrom<T: ToMatrix> {
+    /// Method for getting a matrix of a new type from a matrix of type [`Matrix<T>`].
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
@@ -610,14 +576,48 @@ pub trait MatrixFrom<T> {
     ///
     /// assert_eq!(c, b);
     /// ```
-    fn matrix_from(input: T) -> Self;
+    fn matrix_from(input: Matrix<T>) -> Self;
 }
 
-/// Blanket implementation of [`MatrixFrom`] for [`Matrix<S>`] whenever `T` (which is actually some)[`Matrix<U>`] implements
-/// [`MatrixInto<S>`].
-impl<T: MatrixInto<S>, S: ToMatrix> MatrixFrom<T> for Matrix<S> {
-    fn matrix_from(input: T) -> Self {
-        let out: Matrix<S> = input.matrix_into();
-        out
+/// Blanket implementation of [`MatrixFrom<T>`] for converting [`Matrix<S>`] to [`Matrix<T>`] whenever
+/// `S` implements [`From(T)`]. Look at [`matrix_into`](Self::matrix_into()).
+impl<T: ToMatrix, S: ToMatrix + From<T>> MatrixFrom<T> for Matrix<S> {
+    fn matrix_from(input: Matrix<T>) -> Self {
+        let mut out = Vec::new();
+        for row in input.entries {
+            let mut new_row: Vec<S> = Vec::new();
+            for entry in row {
+                new_row.push(entry.into());
+            }
+            out.push(new_row)
+        }
+        Matrix { entries: out }
+    }
+}
+
+/// Sister trait of [`MatrixFrom`]. Basically does the same thing, just with a
+/// different syntax.
+pub trait MatrixInto<T> {
+    /// Method for converting a matrix [`Matrix<T>`] to another type.
+    /// # Example
+    /// ```
+    /// use matrix_basic::Matrix;
+    /// use matrix_basic::MatrixInto;
+    ///
+    /// let a = Matrix::from(vec![vec![1, 2, 3], vec![0, 1, 2]]).unwrap();
+    /// let b = Matrix::from(vec![vec![1.0, 2.0, 3.0], vec![0.0, 1.0, 2.0]]).unwrap();
+    /// let c: Matrix<f64> = a.matrix_into(); // Type annotation is needed here
+    ///
+    ///
+    /// assert_eq!(c, b);
+    /// ```
+    fn matrix_into(self) -> T;
+}
+
+/// Blanket implementation of [`MatrixInto<T>`] for [`Matrix<S>`] whenever `T`
+/// (which is actually some)[`Matrix<U>`] implements [`MatrixFrom<S>`].
+impl<T: MatrixFrom<S>, S: ToMatrix> MatrixInto<T> for Matrix<S> {
+    fn matrix_into(self) -> T {
+        T::matrix_from(self)
     }
 }
