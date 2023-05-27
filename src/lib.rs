@@ -439,3 +439,42 @@ impl<T: Add + Sub<Output = T> + Mul + Copy + Zero + Neg<Output = T>> Sub for Mat
         }
     }
 }
+
+/// Trait for conversion between matrices of different types.
+/// It only has a `convert_to()` method.
+/// This is needed since negative trait bound are not supported in stable Rust
+/// yet, so we'll have a conflict trying to implement [`From`].
+/// I plan to change this to the default From trait as soon as some sort
+/// of specialization system is implemented.
+/// You can track this issue [here](https://github.com/rust-lang/rust/issues/42721).
+pub trait MatrixInto<T: Mul + Add + Sub> {
+    /// Method for converting a matrix into a matrix of type `Matrix<T>`
+    fn matrix_into(self) -> Matrix<T>;
+}
+
+/// Blanket implementation of MatrixInto for converting `Matrix<S>` to `Matrix<T>` whenever
+/// `S` implements `Into<T>`.
+/// # Example
+/// ```
+/// use matrix_basic::Matrix;
+/// use matrix_basic::MatrixInto;
+///
+/// let a = Matrix::from(vec![vec![1, 2, 3], vec![0, 1, 2]]).unwrap();
+/// let b = Matrix::from(vec![vec![1.0, 2.0, 3.0], vec![0.0, 1.0, 2.0]]).unwrap();
+/// let c: Matrix<f64> = a.matrix_into();
+///
+/// assert_eq!(c, b);
+/// ```
+impl<T: Mul + Add + Sub, S: Mul + Add + Sub + Into<T>> MatrixInto<T> for Matrix<S> {
+    fn matrix_into(self) -> Matrix<T> {
+        let mut out = Vec::new();
+        for row in self.entries {
+            let mut new_row: Vec<T> = Vec::new();
+            for entry in row {
+                new_row.push(entry.into());
+            }
+            out.push(new_row)
+        }
+        Matrix { entries: out }
+    }
+}

@@ -1,5 +1,6 @@
 #[cfg(test)]
 use crate::Matrix;
+
 #[test]
 fn mul_test() {
     let a = Matrix::from(vec![vec![1, 2, 4], vec![3, 4, 9]]).unwrap();
@@ -57,4 +58,13 @@ fn echelon_test() {
     assert_eq!(m.row_echelon(), a);
     assert_eq!(m.column_echelon(), b);
     assert_eq!(m.reduced_row_echelon(), c);
+}
+
+#[test]
+fn conversion_test() {
+    let a = Matrix::from(vec![vec![1, 2, 3], vec![0, 1, 2]]).unwrap();
+    let b = Matrix::from(vec![vec![1.0, 2.0, 3.0], vec![0.0, 1.0, 2.0]]).unwrap();
+
+    use crate::MatrixInto;
+    assert_eq!(a.matrix_into(), b);
 }
