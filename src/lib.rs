@@ -1,6 +1,6 @@
 //! This is a crate for very basic matrix operations
-//! with any type that supports addition, substraction,
-//! and multiplication. Additional properties might be
+//! with any type that implement [`Add`], [`Sub`], [`Mul`],
+//! [`Zero`] and [`Copy`]. Additional properties might be
 //! needed for certain operations.
 //! I created it mostly to learn using generic types
 //! and traits.
@@ -23,11 +23,11 @@ mod tests;
 /// and multiplication defined on it).
 /// Look at [`from`](Self::from()) to see examples.
 #[derive(PartialEq, Debug, Clone)]
-pub struct Matrix<T: Mul + Add + Sub> {
+pub struct Matrix<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> {
     entries: Vec<Vec<T>>,
 }
 
-impl<T: Mul + Add + Sub> Matrix<T> {
+impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matrix<T> {
     /// Creates a matrix from given 2D "array" in a `Vec<Vec<T>>` form.
     /// It'll throw an error if all the given rows aren't of the same size.
     /// # Example
@@ -65,10 +65,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     }
 
     /// Returns the transpose of a matrix.
-    pub fn transpose(&self) -> Self
-    where
-        T: Copy,
-    {
+    pub fn transpose(&self) -> Self {
         let mut out = Vec::new();
         for i in 0..self.width() {
             let mut column = Vec::new();
@@ -86,10 +83,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     }
 
     /// Return the columns of a matrix as `Vec<Vec<T>>`.
-    pub fn columns(&self) -> Vec<Vec<T>>
-    where
-        T: Copy,
-    {
+    pub fn columns(&self) -> Vec<Vec<T>> {
         self.transpose().entries
     }
 
@@ -107,10 +101,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     /// let n = Matrix::from(vec![vec![5,6]]).unwrap();
     /// assert_eq!(m.submatrix(0,0),n);
     /// ```
-    pub fn submatrix(&self, row: usize, col: usize) -> Self
-    where
-        T: Copy,
-    {
+    pub fn submatrix(&self, row: usize, col: usize) -> Self {
         let mut out = Vec::new();
         for (m, row_iter) in self.entries.iter().enumerate() {
             if m == row {
@@ -138,13 +129,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     /// let m = Matrix::from(vec![vec![1,2],vec![3,4]]).unwrap();
     /// assert_eq!(m.det(),Ok(-2));
     /// ```
-    pub fn det(&self) -> Result<T, &'static str>
-    where
-        T: Copy,
-        T: Mul<Output = T>,
-        T: Sub<Output = T>,
-        T: Zero,
-    {
+    pub fn det(&self) -> Result<T, &'static str> {
         if self.is_square() {
             // It's a recursive algorithm using minors.
             // TODO: Implement a faster algorithm.
@@ -181,10 +166,6 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     /// ```
     pub fn det_in_field(&self) -> Result<T, &'static str>
     where
-        T: Copy,
-        T: Mul<Output = T>,
-        T: Sub<Output = T>,
-        T: Zero,
         T: One,
         T: PartialEq,
         T: Div<Output = T>,
@@ -237,10 +218,6 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     /// ```
     pub fn row_echelon(&self) -> Self
     where
-        T: Copy,
-        T: Mul<Output = T>,
-        T: Sub<Output = T>,
-        T: Zero,
         T: One,
         T: PartialEq,
         T: Div<Output = T>,
@@ -284,10 +261,6 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     /// See [`row_echelon`](Self::row_echelon()) and [`transpose`](Self::transpose()).
     pub fn column_echelon(&self) -> Self
     where
-        T: Copy,
-        T: Mul<Output = T>,
-        T: Sub<Output = T>,
-        T: Zero,
         T: One,
         T: PartialEq,
         T: Div<Output = T>,
@@ -305,10 +278,6 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     /// ```
     pub fn reduced_row_echelon(&self) -> Self
     where
-        T: Copy,
-        T: Mul<Output = T>,
-        T: Sub<Output = T>,
-        T: Zero,
         T: One,
         T: PartialEq,
         T: Div<Output = T>,
@@ -329,10 +298,7 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     }
 
     /// Creates a zero matrix of a given size.
-    pub fn zero(height: usize, width: usize) -> Self
-    where
-        T: Zero,
-    {
+    pub fn zero(height: usize, width: usize) -> Self {
         let mut out = Vec::new();
         for _ in 0..height {
             let mut new_row = Vec::new();
@@ -347,7 +313,6 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     /// Creates an identity matrix of a given size.
     pub fn identity(size: usize) -> Self
     where
-        T: Zero,
         T: One,
     {
         let mut out = Vec::new();
@@ -368,13 +333,17 @@ impl<T: Mul + Add + Sub> Matrix<T> {
     // TODO: Canonical forms, eigenvalues, eigenvectors etc.
 }
 
-impl<T: Debug + Mul + Add + Sub> Display for Matrix<T> {
+impl<T: Debug + Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Display
+    for Matrix<T>
+{
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{:?}", self.entries)
     }
 }
 
-impl<T: Mul<Output = T> + Add + Sub + Copy + Zero> Mul for Matrix<T> {
+impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Copy + Zero> Mul
+    for Matrix<T>
+{
     // TODO: Implement a faster algorithm.
     type Output = Self;
     fn mul(self, other: Self) -> Self::Output {
@@ -399,7 +368,9 @@ impl<T: Mul<Output = T> + Add + Sub + Copy + Zero> Mul for Matrix<T> {
     }
 }
 
-impl<T: Add<Output = T> + Sub + Mul + Copy + Zero> Add for Matrix<T> {
+impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Copy + Zero> Add
+    for Matrix<T>
+{
     type Output = Self;
     fn add(self, other: Self) -> Self::Output {
         if self.height() == other.height() && self.width() == other.width() {
@@ -416,7 +387,10 @@ impl<T: Add<Output = T> + Sub + Mul + Copy + Zero> Add for Matrix<T> {
     }
 }
 
-impl<T: Add + Sub<Output = T> + Mul + Copy + Neg<Output = T>> Neg for Matrix<T> {
+impl<
+        T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy + Copy + Neg<Output = T>,
+    > Neg for Matrix<T>
+{
     type Output = Self;
     fn neg(self) -> Self::Output {
         let mut out = self;
@@ -429,7 +403,17 @@ impl<T: Add + Sub<Output = T> + Mul + Copy + Neg<Output = T>> Neg for Matrix<T> 
     }
 }
 
-impl<T: Add + Sub<Output = T> + Mul + Copy + Zero + Neg<Output = T>> Sub for Matrix<T> {
+impl<
+        T: Mul<Output = T>
+            + Add<Output = T>
+            + Sub<Output = T>
+            + Zero
+            + Copy
+            + Copy
+            + Zero
+            + Neg<Output = T>,
+    > Sub for Matrix<T>
+{
     type Output = Self;
     fn sub(self, other: Self) -> Self::Output {
         if self.height() == other.height() && self.width() == other.width() {
@@ -447,7 +431,7 @@ impl<T: Add + Sub<Output = T> + Mul + Copy + Zero + Neg<Output = T>> Sub for Mat
 /// I plan to change this to the default From trait as soon as some sort
 /// of specialization system is implemented.
 /// You can track this issue [here](https://github.com/rust-lang/rust/issues/42721).
-pub trait MatrixInto<T: Mul + Add + Sub> {
+pub trait MatrixInto<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> {
     /// Method for converting a matrix into a matrix of type `Matrix<T>`
     fn matrix_into(self) -> Matrix<T>;
 }
@@ -465,7 +449,11 @@ pub trait MatrixInto<T: Mul + Add + Sub> {
 ///
 /// assert_eq!(c, b);
 /// ```
-impl<T: Mul + Add + Sub, S: Mul + Add + Sub + Into<T>> MatrixInto<T> for Matrix<S> {
+impl<
+        T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy,
+        S: Mul<Output = S> + Add<Output = S> + Sub<Output = S> + Zero + Copy + Into<T>,
+    > MatrixInto<T> for Matrix<S>
+{
     fn matrix_into(self) -> Matrix<T> {
         let mut out = Vec::new();
         for row in self.entries {
