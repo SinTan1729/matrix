@@ -72,5 +72,9 @@ fn conversion_test() {
     let b = Matrix::from(vec![vec![1.0, 2.0, 3.0], vec![0.0, 1.0, 2.0]]).unwrap();
 
     use crate::MatrixInto;
-    assert_eq!(a.matrix_into(), b);
+    assert_eq!(a.clone().matrix_into(), b);
+
+    use crate::MatrixFrom;
+    let c = Matrix::<f64>::matrix_from(a);
+    assert_eq!(c, b);
 }

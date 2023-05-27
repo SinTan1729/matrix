@@ -482,24 +482,24 @@ impl<T: ToMatrix> Sub for Matrix<T> {
 /// of specialization system is implemented.
 /// You can track this issue [here](https://github.com/rust-lang/rust/issues/42721).
 pub trait MatrixInto<T: ToMatrix> {
-    /// Method for converting a matrix into a matrix of type [`Matrix<T>`]
+    /// Method for converting a matrix into a matrix of type [`Matrix<T>`].
+    /// # Example
+    /// ```
+    /// use matrix_basic::Matrix;
+    /// use matrix_basic::MatrixInto;
+    ///
+    /// let a = Matrix::from(vec![vec![1, 2, 3], vec![0, 1, 2]]).unwrap();
+    /// let b = Matrix::from(vec![vec![1.0, 2.0, 3.0], vec![0.0, 1.0, 2.0]]).unwrap();
+    /// let c: Matrix<f64> = a.matrix_into(); // Type annotation is needed here
+    ///
+    /// assert_eq!(c, b);
+    /// ```
     fn matrix_into(self) -> Matrix<T>;
 }
 
 /// Blanket implementation of [`MatrixInto`] for converting [`Matrix<S>`] to [`Matrix<T>`] whenever
-/// `T` implements [`From(S)`].
-/// # Example
-/// ```
-/// use matrix_basic::Matrix;
-/// use matrix_basic::MatrixInto;
-///
-/// let a = Matrix::from(vec![vec![1, 2, 3], vec![0, 1, 2]]).unwrap();
-/// let b = Matrix::from(vec![vec![1.0, 2.0, 3.0], vec![0.0, 1.0, 2.0]]).unwrap();
-/// let c: Matrix<f64> = a.matrix_into();
-///
-/// assert_eq!(c, b);
-/// ```
-impl<T: ToMatrix + From<S>, S: ToMatrix> MatrixInto<T> for Matrix<S> {
+/// `S` implements [`Into(T)`]. Look at [`matrix_into`](Self::matrix_into()).
+impl<T: ToMatrix, S: ToMatrix + Into<T>> MatrixInto<T> for Matrix<S> {
     fn matrix_into(self) -> Matrix<T> {
         let mut out = Vec::new();
         for row in self.entries {
@@ -510,5 +510,32 @@ impl<T: ToMatrix + From<S>, S: ToMatrix> MatrixInto<T> for Matrix<S> {
             out.push(new_row)
         }
         Matrix { entries: out }
+    }
+}
+
+/// Sister trait of [`MatrixInto`]. Basically does the same thing, just with a
+/// different syntax.
+pub trait MatrixFrom<T> {
+    /// Method for getting a matrix from another matrix of type [`Matrix<T>`].
+    /// # Example
+    /// ```
+    /// use matrix_basic::Matrix;
+    /// use matrix_basic::MatrixFrom;
+    ///
+    /// let a = Matrix::from(vec![vec![1, 2, 3], vec![0, 1, 2]]).unwrap();
+    /// let b = Matrix::from(vec![vec![1.0, 2.0, 3.0], vec![0.0, 1.0, 2.0]]).unwrap();
+    /// let c = Matrix::<f64>::matrix_from(a); // Type annotation is needed here
+    ///
+    /// assert_eq!(c, b);
+    /// ```
+    fn matrix_from(input: T) -> Self;
+}
+
+/// Blanket implementation of [`MatrixFrom`] for [`Matrix<S>`] whenever `T` (which is actually some)[`Matrix<U>`] implements
+/// [`MatrixInto<S>`].
+impl<T: MatrixInto<S>, S: ToMatrix> MatrixFrom<T> for Matrix<S> {
+    fn matrix_from(input: T) -> Self {
+        let out: Matrix<S> = input.matrix_into();
+        out
     }
 }
