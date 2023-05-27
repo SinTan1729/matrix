@@ -118,9 +118,8 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
         Matrix { entries: out }
     }
 
-    /// Returns the determinant of a square matrix. This method additionally requires [`Zero`],
-    /// [`One`] and [`Copy`] traits. Also, we need that the [`Mul`] and [`Add`] operations
-    /// return the same type `T`. This uses basic recursive algorithm using cofactor-minor.
+    /// Returns the determinant of a square matrix.
+    /// This uses basic recursive algorithm using cofactor-minor.
     /// See [`det_in_field`](Self::det_in_field()) for faster determinant calculation in fields.
     /// It'll throw an error if the provided matrix isn't square.
     /// # Example
@@ -208,7 +207,7 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
         }
     }
 
-    /// Returns the row echelon form of a matrix over a field i.e. needs [`One`] and [`Div`] traits.
+    /// Returns the row echelon form of a matrix over a field i.e. needs the [`Div`] trait.
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
@@ -218,7 +217,6 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// ```
     pub fn row_echelon(&self) -> Self
     where
-        T: One,
         T: PartialEq,
         T: Div<Output = T>,
     {
@@ -256,19 +254,18 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
         Matrix { entries: rows }
     }
 
-    /// Returns the column echelon form of a matrix over a field i.e. needs [`One`] and [`Div`] traits.
+    /// Returns the column echelon form of a matrix over a field i.e. needs the [`Div`] trait.
     /// It's just the transpose of the row echelon form of the transpose.
     /// See [`row_echelon`](Self::row_echelon()) and [`transpose`](Self::transpose()).
     pub fn column_echelon(&self) -> Self
     where
-        T: One,
         T: PartialEq,
         T: Div<Output = T>,
     {
         self.transpose().row_echelon().transpose()
     }
 
-    /// Returns the reduced row echelon form of a matrix over a field i.e. needs [`One`] and [`Div`] traits.
+    /// Returns the reduced row echelon form of a matrix over a field i.e. needs the `Div`] trait.
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
@@ -278,7 +275,6 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// ```
     pub fn reduced_row_echelon(&self) -> Self
     where
-        T: One,
         T: PartialEq,
         T: Div<Output = T>,
     {
@@ -311,6 +307,7 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     }
 
     /// Creates an identity matrix of a given size.
+    /// It needs the [`One`] trait.
     pub fn identity(size: usize) -> Self
     where
         T: One,
@@ -328,6 +325,26 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
             out.push(new_row);
         }
         Matrix { entries: out }
+    }
+
+    /// Returns the trace of a square matrix.
+    /// It'll throw an error if the provided matrix isn't square.
+    /// # Example
+    /// ```
+    /// use matrix_basic::Matrix;
+    /// let m = Matrix::from(vec![vec![1,2],vec![3,4]]).unwrap();
+    /// assert_eq!(m.det(),Ok(-2));
+    /// ```
+    pub fn trace(self) -> Result<T, &'static str> {
+        if self.is_square() {
+            let mut out = self.entries[0][0];
+            for i in 1..self.height() {
+                out = out + self.entries[i][i];
+            }
+            Ok(out)
+        } else {
+            Err("Provided matrix isn't square.")
+        }
     }
 
     // TODO: Canonical forms, eigenvalues, eigenvectors etc.
