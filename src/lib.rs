@@ -97,7 +97,7 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
-    /// let m = Matrix::from(vec![vec![1,2,3],vec![4,5,6]]).unwrap();
+    /// let m = Matrix::from(vec![vec![1,2,3], vec![4,5,6]]).unwrap();
     /// let n = Matrix::from(vec![vec![5,6]]).unwrap();
     /// assert_eq!(m.submatrix(0,0),n);
     /// ```
@@ -125,7 +125,7 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
-    /// let m = Matrix::from(vec![vec![1,2],vec![3,4]]).unwrap();
+    /// let m = Matrix::from(vec![vec![1,2], vec![3,4]]).unwrap();
     /// assert_eq!(m.det(),Ok(-2));
     /// ```
     pub fn det(&self) -> Result<T, &'static str> {
@@ -160,7 +160,7 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
-    /// let m = Matrix::from(vec![vec![1.0,2.0],vec![3.0,4.0]]).unwrap();
+    /// let m = Matrix::from(vec![vec![1.0,2.0], vec![3.0,4.0]]).unwrap();
     /// assert_eq!(m.det(),Ok(-2.0));
     /// ```
     pub fn det_in_field(&self) -> Result<T, &'static str>
@@ -211,7 +211,7 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
-    /// let m = Matrix::from(vec![vec![1.0,2.0,3.0],vec![3.0,4.0,5.0]]).unwrap();
+    /// let m = Matrix::from(vec![vec![1.0,2.0,3.0], vec![3.0,4.0,5.0]]).unwrap();
     /// let n = Matrix::from(vec![vec![1.0,2.0,3.0], vec![0.0,-2.0,-4.0]]).unwrap();
     /// assert_eq!(m.row_echelon(),n);
     /// ```
@@ -269,7 +269,7 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
-    /// let m = Matrix::from(vec![vec![1.0,2.0,3.0],vec![3.0,4.0,5.0]]).unwrap();
+    /// let m = Matrix::from(vec![vec![1.0,2.0,3.0], vec![3.0,4.0,5.0]]).unwrap();
     /// let n = Matrix::from(vec![vec![1.0,2.0,3.0], vec![0.0,1.0,2.0]]).unwrap();
     /// assert_eq!(m.reduced_row_echelon(),n);
     /// ```
@@ -312,19 +312,11 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     where
         T: One,
     {
-        let mut out = Vec::new();
-        for i in 0..size {
-            let mut new_row = Vec::new();
-            for j in 0..size {
-                if i == j {
-                    new_row.push(T::one());
-                } else {
-                    new_row.push(T::zero());
-                }
-            }
-            out.push(new_row);
+        let mut out = Matrix::zero(size, size);
+        for (i, row) in out.entries.iter_mut().enumerate() {
+            row[i] = T::one();
         }
-        Matrix { entries: out }
+        out
     }
 
     /// Returns the trace of a square matrix.
@@ -332,8 +324,8 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
     /// # Example
     /// ```
     /// use matrix_basic::Matrix;
-    /// let m = Matrix::from(vec![vec![1,2],vec![3,4]]).unwrap();
-    /// assert_eq!(m.det(),Ok(-2));
+    /// let m = Matrix::from(vec![vec![1,2], vec![3,4]]).unwrap();
+    /// assert_eq!(m.trace(),Ok(5));
     /// ```
     pub fn trace(self) -> Result<T, &'static str> {
         if self.is_square() {
@@ -345,6 +337,24 @@ impl<T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Zero + Copy> Matri
         } else {
             Err("Provided matrix isn't square.")
         }
+    }
+
+    /// Returns a diagonal matrix with a given diagonal.
+    /// # Example
+    /// ```
+    /// use matrix_basic::Matrix;
+    /// let m = Matrix::diagonal_matrix(vec![1,2,3]);
+    /// let n = Matrix::from(vec![vec![1,0,0], vec![0,2,0], vec![0,0,3]]).unwrap();
+    ///
+    /// assert_eq!(m,n);
+    /// ```
+    pub fn diagonal_matrix(diag: Vec<T>) -> Self {
+        let size = diag.len();
+        let mut out = Matrix::zero(size, size);
+        for (i, row) in out.entries.iter_mut().enumerate() {
+            row[i] = diag[i];
+        }
+        out
     }
 
     // TODO: Canonical forms, eigenvalues, eigenvectors etc.

@@ -41,12 +41,13 @@ fn det_trace_test() {
 }
 
 #[test]
-fn zero_one_test() {
+fn zero_one_diag_test() {
     let a = Matrix::from(vec![vec![0, 0, 0], vec![0, 0, 0]]).unwrap();
     let b = Matrix::from(vec![vec![1, 0], vec![0, 1]]).unwrap();
 
     assert_eq!(Matrix::<i32>::zero(2, 3), a);
     assert_eq!(Matrix::<i32>::identity(2), b);
+    assert_eq!(Matrix::diagonal_matrix(vec![1, 1]), b);
 }
 
 #[test]
