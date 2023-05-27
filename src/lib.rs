@@ -31,7 +31,7 @@ pub trait ToMatrix:
 {
 }
 
-/// Blanket implementation for ToMatrix for any type that satisfies its bounds.
+/// Blanket implementation for [`ToMatrix`] for any type that satisfies its bounds.
 impl<T> ToMatrix for T where
     T: Mul<Output = T>
         + Add<Output = T>
@@ -482,12 +482,12 @@ impl<T: ToMatrix> Sub for Matrix<T> {
 /// of specialization system is implemented.
 /// You can track this issue [here](https://github.com/rust-lang/rust/issues/42721).
 pub trait MatrixInto<T: ToMatrix> {
-    /// Method for converting a matrix into a matrix of type `Matrix<T>`
+    /// Method for converting a matrix into a matrix of type [`Matrix<T>`]
     fn matrix_into(self) -> Matrix<T>;
 }
 
-/// Blanket implementation of MatrixInto for converting `Matrix<S>` to `Matrix<T>` whenever
-/// `S` implements `Into<T>`.
+/// Blanket implementation of [`MatrixInto`] for converting [`Matrix<S>`] to [`Matrix<T>`] whenever
+/// `T` implements [`From(S)`].
 /// # Example
 /// ```
 /// use matrix_basic::Matrix;
@@ -499,7 +499,7 @@ pub trait MatrixInto<T: ToMatrix> {
 ///
 /// assert_eq!(c, b);
 /// ```
-impl<T: ToMatrix, S: ToMatrix + Into<T>> MatrixInto<T> for Matrix<S> {
+impl<T: ToMatrix + From<S>, S: ToMatrix> MatrixInto<T> for Matrix<S> {
     fn matrix_into(self) -> Matrix<T> {
         let mut out = Vec::new();
         for row in self.entries {
