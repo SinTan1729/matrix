@@ -2,6 +2,7 @@
 //! with any type that implement [`Add`], [`Sub`], [`Mul`],
 //! [`Zero`], [`Neg`] and [`Copy`]. Additional properties might be
 //! needed for certain operations.
+//!
 //! I created it mostly to learn using generic types
 //! and traits.
 //!
@@ -184,7 +185,7 @@ impl<T: ToMatrix> Matrix<T> {
     /// ```
     /// use matrix_basic::Matrix;
     /// let m = Matrix::from(vec![vec![1.0, 2.0], vec![3.0, 4.0]]).unwrap();
-    /// assert_eq!(m.det(), Ok(-2.0));
+    /// assert_eq!(m.det_in_field(), Ok(-2.0));
     /// ```
     pub fn det_in_field(&self) -> Result<T, &'static str>
     where
@@ -198,14 +199,14 @@ impl<T: ToMatrix> Matrix<T> {
             let mut multiplier = T::one();
             let h = self.height();
             let w = self.width();
-            for i in 0..h {
+            for i in 0..(h - 1) {
                 // First check if the row has diagonal element 0, if yes, then swap.
                 if rows[i][i] == T::zero() {
                     let mut zero_column = true;
                     for j in (i + 1)..h {
                         if rows[j][i] != T::zero() {
                             rows.swap(i, j);
-                            multiplier = T::zero() - multiplier;
+                            multiplier = -multiplier;
                             zero_column = false;
                             break;
                         }
@@ -248,7 +249,7 @@ impl<T: ToMatrix> Matrix<T> {
         let mut offset = 0;
         let h = self.height();
         let w = self.width();
-        for i in 0..h {
+        for i in 0..(h - 1) {
             // Check if all the rows below are 0
             if i + offset >= self.width() {
                 break;
@@ -396,6 +397,87 @@ impl<T: ToMatrix> Matrix<T> {
             for entry in row {
                 *entry = *entry * scalar;
             }
+        }
+    }
+
+    /// Returns the inverse of a square matrix. Throws an error if the matrix isn't square.
+    /// /// # Example
+    /// ```
+    /// use matrix_basic::Matrix;
+    /// let m = Matrix::from(vec![vec![1.0, 2.0], vec![3.0, 4.0]]).unwrap();
+    /// let n = Matrix::from(vec![vec![-2.0, 1.0], vec![1.5, -0.5]]).unwrap();
+    /// assert_eq!(m.inverse(), Ok(n));
+    /// ```
+    pub fn inverse(&self) -> Result<Self, &'static str>
+    where
+        T: Div<Output = T>,
+        T: One,
+        T: PartialEq,
+    {
+        if self.is_square() {
+            // We'll use the basic technique of using an augmented matrix (in essence)
+            // Cloning is necessary as we'll be doing row operations on it.
+            let mut rows = self.entries.clone();
+            let h = self.height();
+            let w = self.width();
+            let mut out = Self::identity(h).entries;
+
+            // First we get row echelon form
+            for i in 0..(h - 1) {
+                // First check if the row has diagonal element 0, if yes, then swap.
+                if rows[i][i] == T::zero() {
+                    let mut zero_column = true;
+                    for j in (i + 1)..h {
+                        if rows[j][i] != T::zero() {
+                            rows.swap(i, j);
+                            out.swap(i, j);
+                            zero_column = false;
+                            break;
+                        }
+                    }
+                    if zero_column {
+                        return Err("Provided matrix is singular.");
+                    }
+                }
+                for j in (i + 1)..h {
+                    let ratio = rows[j][i] / rows[i][i];
+                    for k in i..w {
+                        rows[j][k] = rows[j][k] - rows[i][k] * ratio;
+                    }
+                    // We cannot skip entries here as they might not be 0
+                    for k in 0..w {
+                        out[j][k] = out[j][k] - out[i][k] * ratio;
+                    }
+                }
+            }
+
+            // Then we reduce the rows
+            for i in 0..h {
+                if rows[i][i] == T::zero() {
+                    return Err("Provided matrix is singular.");
+                }
+                let divisor = rows[i][i];
+                for entry in rows[i].iter_mut().skip(i) {
+                    *entry = *entry / divisor;
+                }
+                for entry in out[i].iter_mut() {
+                    *entry = *entry / divisor;
+                }
+            }
+
+            // Finally, we do upside down row reduction
+            for i in (1..h).rev() {
+                for j in (0..i).rev() {
+                    let ratio = rows[j][i];
+                    for k in 0..w {
+                        out[j][k] = out[j][k] - out[i][k] * ratio;
+                    }
+                }
+            }
+
+            Ok(Matrix { entries: out })
+        } else {
+            Err("Provided matrix isn't square.")
         }
     }
 

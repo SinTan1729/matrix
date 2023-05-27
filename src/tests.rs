@@ -78,3 +78,24 @@ fn conversion_test() {
     let c = Matrix::<f64>::matrix_from(a);
     assert_eq!(c, b);
 }
+
+#[test]
+fn inverse_test() {
+    let a = Matrix::from(vec![vec![1.0, 2.0], vec![1.0, 2.0]]).unwrap();
+    let b = Matrix::from(vec![
+        vec![1.0, 2.0, 3.0],
+        vec![0.0, 1.0, 4.0],
+        vec![5.0, 6.0, 0.0],
+    ])
+    .unwrap();
+    let c = Matrix::from(vec![
+        vec![-24.0, 18.0, 5.0],
+        vec![20.0, -15.0, -4.0],
+        vec![-5.0, 4.0, 1.0],
+    ])
+    .unwrap();
+
+    println!("{:?}", a.inverse());
+    assert!(a.inverse().is_err());
+    assert_eq!(b.inverse(), Ok(c));
+}
