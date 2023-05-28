@@ -54,7 +54,7 @@ pub struct Matrix<T: ToMatrix> {
 }
 
 impl<T: ToMatrix> Matrix<T> {
-    /// Creates a matrix from given 2D "array" in a `Vec<Vec<T>>` form.
+    /// Creates a matrix from given 2D "array" in a [`Vec<Vec<T>>`] form.
     /// It'll throw an error if all the given rows aren't of the same size.
     /// # Example
     /// ```
