@@ -8,6 +8,7 @@
 //!
 //! Sayantan Santra (2023)
 
+use errors::MatrixError;
 use num::{
     traits::{One, Zero},
     Integer,
@@ -18,6 +19,7 @@ use std::{
     result::Result,
 };
 
+pub mod errors;
 mod tests;
 
 /// Trait a type must satisfy to be element of a matrix. This is
@@ -62,7 +64,7 @@ impl<T: ToMatrix> Matrix<T> {
     /// will create the following matrix:  
     /// ⌈1, 2, 3⌉  
     /// ⌊4, 5, 6⌋
-    pub fn from(entries: Vec<Vec<T>>) -> Result<Matrix<T>, &'static str> {
+    pub fn from(entries: Vec<Vec<T>>) -> Result<Matrix<T>, MatrixError> {
         let mut equal_rows = true;
         let row_len = entries[0].len();
         for row in &entries {
@@ -74,7 +76,7 @@ impl<T: ToMatrix> Matrix<T> {
         if equal_rows {
             Ok(Matrix { entries })
         } else {
-            Err("Unequal rows.")
+            Err(MatrixError::UnequalRows)
         }
     }
 
@@ -152,7 +154,7 @@ impl<T: ToMatrix> Matrix<T> {
     /// let m = Matrix::from(vec![vec![1, 2], vec![3, 4]]).unwrap();
     /// assert_eq!(m.det(), Ok(-2));
     /// ```
-    pub fn det(&self) -> Result<T, &'static str> {
+    pub fn det(&self) -> Result<T, MatrixError> {
         if self.is_square() {
             // It's a recursive algorithm using minors.
             // TODO: Implement a faster algorithm.
@@ -173,7 +175,7 @@ impl<T: ToMatrix> Matrix<T> {
             };
             Ok(out)
         } else {
-            Err("Provided matrix isn't square.")
+            Err(MatrixError::NotSquare)
         }
     }
 
@@ -187,7 +189,7 @@ impl<T: ToMatrix> Matrix<T> {
     /// let m = Matrix::from(vec![vec![1.0, 2.0], vec![3.0, 4.0]]).unwrap();
     /// assert_eq!(m.det_in_field(), Ok(-2.0));
     /// ```
-    pub fn det_in_field(&self) -> Result<T, &'static str>
+    pub fn det_in_field(&self) -> Result<T, MatrixError>
     where
         T: One,
         T: PartialEq,
@@ -227,7 +229,7 @@ impl<T: ToMatrix> Matrix<T> {
             }
             Ok(multiplier)
         } else {
-            Err("Provided matrix isn't square.")
+            Err(MatrixError::NotSquare)
         }
     }
 
@@ -351,7 +353,7 @@ impl<T: ToMatrix> Matrix<T> {
     /// let m = Matrix::from(vec![vec![1, 2], vec![3, 4]]).unwrap();
     /// assert_eq!(m.trace(), Ok(5));
     /// ```
-    pub fn trace(self) -> Result<T, &'static str> {
+    pub fn trace(self) -> Result<T, MatrixError> {
         if self.is_square() {
             let mut out = self.entries[0][0];
             for i in 1..self.height() {
@@ -359,7 +361,7 @@ impl<T: ToMatrix> Matrix<T> {
             }
             Ok(out)
         } else {
-            Err("Provided matrix isn't square.")
+            Err(MatrixError::NotSquare)
         }
     }
 
@@ -408,7 +410,7 @@ impl<T: ToMatrix> Matrix<T> {
     /// let n = Matrix::from(vec![vec![-2.0, 1.0], vec![1.5, -0.5]]).unwrap();
     /// assert_eq!(m.inverse(), Ok(n));
     /// ```
-    pub fn inverse(&self) -> Result<Self, &'static str>
+    pub fn inverse(&self) -> Result<Self, MatrixError>
     where
         T: Div<Output = T>,
         T: One,
@@ -436,7 +438,7 @@ impl<T: ToMatrix> Matrix<T> {
                         }
                     }
                     if zero_column {
-                        return Err("Provided matrix is singular.");
+                        return Err(MatrixError::Singular);
                     }
                 }
                 for j in (i + 1)..h {
@@ -454,7 +456,7 @@ impl<T: ToMatrix> Matrix<T> {
             // Then we reduce the rows
             for i in 0..h {
                 if rows[i][i] == T::zero() {
-                    return Err("Provided matrix is singular.");
+                    return Err(MatrixError::Singular);
                 }
                 let divisor = rows[i][i];
                 for entry in rows[i].iter_mut().skip(i) {
@@ -477,7 +479,7 @@ impl<T: ToMatrix> Matrix<T> {
 
             Ok(Matrix { entries: out })
         } else {
-            Err("Provided matrix isn't square.")
+            Err(MatrixError::NotSquare)
         }
     }
 
@@ -496,7 +498,7 @@ impl<T: Mul<Output = T> + ToMatrix> Mul for Matrix<T> {
     fn mul(self, other: Self) -> Self::Output {
         let width = self.width();
         if width != other.height() {
-            panic!("Row length of first matrix must be same as column length of second matrix.");
+            panic!("row length of first matrix != column length of second matrix");
         } else {
             let mut out = Vec::new();
             for row in self.rows() {
@@ -527,7 +529,7 @@ impl<T: Mul<Output = T> + ToMatrix> Add for Matrix<T> {
             }
             Matrix { entries: out }
         } else {
-            panic!("Both matrices must be of same dimensions.");
+            panic!("provided matrices have different dimensions");
         }
     }
 }
@@ -551,7 +553,7 @@ impl<T: ToMatrix> Sub for Matrix<T> {
         if self.height() == other.height() && self.width() == other.width() {
             self + -other
         } else {
-            panic!("Both matrices must be of same dimensions.");
+            panic!("provided matrices have different dimensions");
         }
     }
 }
